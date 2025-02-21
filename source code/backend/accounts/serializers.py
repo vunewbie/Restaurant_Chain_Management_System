@@ -23,8 +23,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             user = get_user_model().objects.get(
                 Q(username=identifier) |
                 Q(email=identifier) |
-                Q(phone_number=identifier) |
-                Q(citizen_id=identifier)
+                Q(phone_number=identifier)
             )
             
             if user.check_password(password) and user.is_active:

@@ -16,6 +16,10 @@ django-cors-headers = "*"
 django-filter = "*"
 djangorestframework-simplejwt = "*"
 whitenoise = "*"
+social-auth-app-django = "*"
+drf-social-oauth2 = "*"
+social-auth-core = "*"
+django-extensions = "*"
 
 [dev-packages]
 

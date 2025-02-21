@@ -5,54 +5,38 @@ from phonenumber_field.modelfields import PhoneNumberField
 from establishments.models import Branch, Department
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email=None, password=None, 
-                    phone_number=None, citizen_id=None, full_name=None, 
-                    gender=None, date_of_birth=None, **extra_fields):
-        
-        if not username:
-            raise ValueError("The Username field must be set")
+    def create_user(self, username=None, email=None, password=None, **extra_fields):
         if not email:
             raise ValueError("The Email field must be set")
-        if not phone_number:
-            raise ValueError("The Phone Number field must be set")
-        if not citizen_id:
-            raise ValueError("The Citizen ID field must be set")
-        if not full_name:
-            raise ValueError("The Full Name field must be set")
-        if not gender:
-            raise ValueError("The gender field must be set")
-        if not date_of_birth:
-            raise ValueError("The date of birth field must be set")
-
         email = self.normalize_email(email)
-
-        user = self.model(username=username, email=email, 
-                          phone_number=phone_number, citizen_id=citizen_id, 
-                          full_name=full_name, gender=gender, 
-                          date_of_birth=date_of_birth, **extra_fields)
-        
-        user.set_password(password)
+        user = self.model(username=username, email=email, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
         user.save(using=self._db)
-        
         return user
 
-    def create_superuser(self, username, email=None, password=None, 
-                         phone_number=None, citizen_id=None, full_name=None, 
-                         gender=None, date_of_birth=None, **extra_fields):
-        
-        extra_fields.setdefault('avatar', 'avatars/admin.jpg')
-        extra_fields.setdefault('type', 'A')
-
-        return self.create_user(username, email, password, phone_number, citizen_id, full_name, gender, date_of_birth, **extra_fields)
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(username, email, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=30, unique=True, blank=False, null=False)
-    phone_number = PhoneNumberField(unique=True, blank=False, null=False)
+    phone_number = PhoneNumberField(unique=True, blank=True, null=True, default=None)
     email = models.EmailField(unique=True, blank=False, null=False)
-    citizen_id = models.CharField(max_length=12, unique=True, blank=False, null=False)
-    full_name = models.CharField(max_length=50, blank=False, null=False)
-    gender = models.CharField(max_length=3, choices=[('M', 'Male'), ('F', 'Female')], blank=False, null=False)
-    date_of_birth = models.DateField(blank=False, null=False)
+    citizen_id = models.CharField(max_length=12, unique=True, blank=True, null=True, default=None)
+    full_name = models.CharField(max_length=50, blank=True, null=True, default='')
+    gender = models.CharField(
+        max_length=3, 
+        choices=[('M', 'Male'), 
+        ('F', 'Female')], 
+        blank=False, 
+        null=False, 
+        default='M'
+    )
+    date_of_birth = models.DateField(blank=True, null=True)
     avatar = models.ImageField(upload_to= 'avatars/', blank=True, null=True, default='avatars/default.jpg')
     is_active = models.BooleanField(default=True)
     date_created = models.DateField(auto_now_add=True)
@@ -64,8 +48,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         default='C'
     )
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'phone_number', 'citizen_id', 'full_name', 'gender', 'date_of_birth']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 
     objects = CustomUserManager()
 
